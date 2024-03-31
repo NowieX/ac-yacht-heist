@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Midden geplaatste container</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="script.js"></script>
+</head>
+<body>
+    <div id="container" class="text-white font-sans flex items-center justify-center h-screen container mx-auto px-4 py-16">
+        <div class="bg-gray-800 p-6 rounded-lg text-center">
+            <h1 class="text-4xl font-bold mb-8">Welkom bij de jacht overval.</h1>
+            <p class="text-md mb-6">Hallo! Het is geweldig dat je hier bent. Ik ben <b>Willem</b>, en ik zal je begeleiden bij de overval op het jacht. We gaan een aantal stappen doorlopen, te beginnen met het hacken van de beveiligingscamera's bij een klein gebouw in het noorden. Daar kun jij een speciaal hackersapparaat gebruiken om in te breken in het systeem. Zodra je dat hebt gedaan, kun je met een boot naar het jacht gaan om alle waardevolle spullen van boord te halen. Wees voorzichtig en houd je hoofd koel. We gaan dit tot een succes maken!</p>
+            <div class="flex justify-center gap-12">
+                <button onclick="StartHeist()" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition duration-300 ease-in-out">Start heist!</button>
+                <button onclick="CloseHeistMenu()" class="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition duration-300 ease-in-out">Andere keer...</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

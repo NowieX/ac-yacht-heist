@@ -6,10 +6,13 @@ author 'nw | nowiex'
 
 game 'gta5'
 
+ui_page "web/index.html"
+
 dependency {
 	'oxmysql',
 	'ox_inventory',
-	'es_extended'
+	'es_extended',
+	'bob74_ipl',
 }
 
 shared_script {
@@ -26,6 +29,11 @@ client_script {
 server_script {
 	'@oxmysql/lib/MySQL.lua',
 	'server/server.lua',
+}
+
+files {
+	"web/index.html",
+	"web/script.js",
 }
 
 lua54 'yes'
