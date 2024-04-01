@@ -1,3 +1,5 @@
+local gold_tables = require "client.gold_tables"
+
 --- @param blip_x number
 --- @param blip_y number
 --- @param blip_z number
@@ -58,9 +60,42 @@ local function TeleportPlayerToLocation(player_coords, player_heading)
     DoScreenFadeIn(Config.HeistInformation['BlackScreenTimer'])
 end
 
-local function SpawnLootTables(coords, heading)
+local gold_picking_zones = {}
+
+local function CreateGoldTables(coords, heading, target_name)
+    local table_object = CreateObject(`h4_prop_h4_table_isl_01a`, coords.x, coords.y, coords.z, true, true, false)
+    SetEntityHeading(table_object, heading)
     
+    local gold_object_coords = GetOffsetFromEntityInWorldCoords(table_object, 0.0, -0.2, -0.053)
+    local gold_object = CreateObject(`h4_prop_h4_gold_stack_01a`, gold_object_coords.x, gold_object_coords.y, gold_object_coords.z, true, true, false)
+    SetEntityHeading(gold_object, heading)
+    PlaceObjectOnGroundProperly(table_object)
+
+    Gold_picking_Zone = exports.ox_target:addBoxZone({
+        coords = vec3(gold_object_coords.x, gold_object_coords.y, gold_object_coords.z),
+        size = vec3(1, 1, 1),
+        rotation = 360,
+        debug = Config.Debugger,
+        options = {
+            {
+                onSelect = function ()
+                    local zone = gold_picking_zones[target_name]
+                    if zone then
+                        exports.ox_target:removeZone(zone)
+                        gold_picking_zones[target_name] = nil
+                    end
+                    TriggerEvent('ac-yacht-heist:client:StartPickingGoldScene', {table_object, gold_object, gold_object_coords, heading})
+                end,
+                distance = Config.GeneralTargetDistance,
+                icon = 'fa fa-sack-dollar',
+                label = Config.HeistLocations.Yacht_location.target_label,
+                name = target_name,
+            },
+        }
+    })
+    gold_picking_zones[target_name] = Gold_picking_Zone
 end
+
 
 CreateThread(function()
     AddDoorToSystem(`door_camera_building`, `v_ilev_rc_door2`, 1005.2922363281, -2998.2661132812, -47.496891021729, false, false, false)
@@ -229,19 +264,16 @@ RegisterNetEvent("ac-yacht-heist:client:GoToYacht", function (NetworkId)
     })
 
     if PlayerIsInRange(playerPed, Config.HeistLocations.Yacht_location.yacht_coords) then
-        SpawnLootTables()
+        for index=1, #gold_tables do
+            CreateGoldTables(gold_tables[index].coords, gold_tables[index].heading, gold_tables[index])
+        end
     end
 end)
 
-RegisterCommand('check_yacht', function ()
-    local playerPed = PlayerPedId
-    if PlayerIsInRange(playerPed, Config.HeistLocations.Yacht_location.yacht_coords) then
-        lib.notify({
-            title = "Test",
-            description = "Speler is in de range van de boot en nu kunnen de tafels met geld ingespawned worden.",
-            duration = 10000, 
-            position = "top-right",
-            type = 'info'
-        })
+RegisterCommand('test_yacht', function ()
+    if PlayerIsInRange(GetPlayerPed(-1), Config.HeistLocations.Yacht_location.yacht_coords) then
+        for index=1, #gold_tables do
+            CreateGoldTables(gold_tables[index].coords, gold_tables[index].heading, gold_tables[index])
+        end
     end
 end, false)
