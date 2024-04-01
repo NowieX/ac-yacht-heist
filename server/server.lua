@@ -97,8 +97,9 @@ local function PlayerIsInRange(xPlayer, coords)
         Citizen.Wait(1500)
         local player_coords = xPlayer.getCoords(true)
         local distance = #(coords - player_coords)
+        print(distance)
 
-        if distance < 200 then
+        if distance < 400 then
             return true
         end
     end
@@ -132,7 +133,15 @@ RegisterNetEvent("ac-yacht-heist:server:PassAllChecks", function ()
 end)
 
 RegisterNetEvent("ac-yacht-heist:server:SpawnBoatToSteal", function ()
-    print("Gaan nu boot stelen")
+    local src = source
+    local xPlayer = ESX.GetPlayerFromId(src)
+    local boat = Config.HeistLocations.Boat_Pickup_Location
+    
+    if PlayerIsInRange(xPlayer, boat.boat_coords) then
+        ESX.OneSync.SpawnVehicle(boat.BoatModel, boat.boat_coords, boat.boat_heading, {fuelLevel = 100}, function(NetworkId)
+            TriggerClientEvent('ac-yacht-heist:client:GoToYacht', src, NetworkId)
+        end)
+    end
 end)
 
 RegisterNetEvent("ac-yacht-heist:server:HeistStarted", function ()
