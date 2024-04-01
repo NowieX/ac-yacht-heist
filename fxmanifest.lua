@@ -2,7 +2,7 @@ fx_version 'cerulean'
 
 Description 'ac-yacht-heist created by nowiex'
 
-author 'nw | nowiex'
+author 'nw | nowiex | Developer @ AquaCity'
 
 game 'gta5'
 
