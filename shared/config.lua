@@ -28,7 +28,7 @@ Config.Webhook = {
 Config.HeistInformation = {
     ['HeistCooldownTimer'] = 30, -- Minuten
     ['PoliceNumberRequired'] = 0,
-    ['BlackScreenTimer'] = 1000 -- Tijd hoelang het duurt voordat een speler in het camera gebouw is
+    ['BlackScreenTimer'] = 1000, -- Tijd hoelang het duurt voordat een speler in het camera gebouw is
 }
 
 Config.Notifies = {
@@ -66,8 +66,25 @@ Config.HeistLocations = {
     },
 
     Boat_Pickup_Location = {
-        spawn_location = vec4(3392.1477, 5697.4932, 0.2093, 112.7311),
+        boat_coords = vec3(3392.1477, 5697.4932, 0.2093),
+        boat_heading = 112.7311,
+        BoatModel = "dinghy3",
+        notification = {
+            label = "Goed, de dinghy heb je dus gevonden. Ik heb het gebied gemarkeerd waar de jacht zich bevindt. Ga er naartoe en pak zo snel mogelijk de buit, pas wel op want de politie kan komen!",
+            timer = 10000,
+        }
+    },
 
+    Yacht_location = {
+        yacht_coords = vec3(-1419.2977, 6753.5186, 11.9082),
+    }
+}
+
+Config.LootTrolleys = {
+    {
+        coords = vec3(-1386.9408, 6740.5083, 8.9715),
+        heading = 70.5634,
+        
     }
 }
 
