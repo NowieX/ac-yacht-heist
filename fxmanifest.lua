@@ -24,7 +24,7 @@ shared_script {
 client_script {
 	'client/client.lua',
 	'shared/scenes.lua',
-	'client/gold_tables.lua'
+	'client/prop_tables.lua'
 }
 
 server_script {

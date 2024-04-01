@@ -48,7 +48,6 @@ RegisterNetEvent('ac-yacht-heist:client:StartHackCamera', function()
     local hacker_card = CreateObject(`hei_prop_heist_card_hack_02`, scene_coords.x, scene_coords.y, scene_coords.z, true, true, false)
     local suit_bag = CreateObject(`hei_prop_heist_card_hack`, scene_coords.x, scene_coords.y, scene_coords.z, true, true, false)
 
-    
     local start_hacking_scene = NetworkCreateSynchronisedScene(scene_coords.x, scene_coords.y, scene_coords.z, rotation.x, rotation.y, rotation.z, 2, true, false, 1065353216, 0, 1065353216)
     
     NetworkAddPedToSynchronisedScene(playerPed, start_hacking_scene, animDict, "hack_enter", 1.5, -4.0, 2, 16, 1148846080, 0)
@@ -102,64 +101,82 @@ RegisterNetEvent('ac-yacht-heist:client:StartHackCamera', function()
     DeleteEntity(security_panel)
 end)
 
-RegisterNetEvent('ac-yacht-heist:client:StartPickingGoldScene', function (data)
-    DeleteEntity(data[2])
+scene_table_objects = {}
+
+RegisterNetEvent('ac-yacht-heist:client:StartPickingScene', function (data)
+    local scene_information = {
+        table_object = data[1],
+        prop = data[2],
+        object_coords = data[3],
+        heading = data[4],
+        kind_prop = data[5],
+        blip = data[6]
+    }
+
+    table.insert(scene_table_objects, scene_information.table_object)
+    table.insert(scene_table_objects, scene_information.prop)
+    
+    DeleteEntity(scene_information.prop)
+    local entity_for_scene = scene_information.kind_prop
+
     local playerPed = PlayerPedId()
-    local scene_coords = vec3(data[3].x, data[3].y, data[3].z)
-    local rotation = vec3(0.0, 0.0, data[4])
-    local animDict = "anim@scripted@player@mission@tun_table_grab@gold@"
+    local scene_coords = vec3(scene_information.object_coords.x, scene_information.object_coords.y, scene_information.object_coords.z)
+    local rotation = vec3(0.0, 0.0, scene_information.heading)
+    local animDict = "anim@scripted@player@mission@tun_table_grab@"..entity_for_scene.."@"
     
     RequestAnimDict(animDict)
     while not HasAnimDictLoaded(animDict) do Citizen.Wait(10) end
     
-    loadModel('h4_prop_h4_gold_stack_01a')
+    loadModel('h4_prop_h4_'..entity_for_scene..'_stack_01a')
     loadModel('ch_p_m_bag_var07_arm_s')
     
-    local gold = CreateObject(`h4_prop_h4_gold_stack_01a`, scene_coords.x, scene_coords.y, scene_coords.z, true, true, false)
-    SetEntityHeading(gold, rotation.z)
+    local entity = CreateObject(GetHashKey('h4_prop_h4_'..entity_for_scene..'_stack_01a'), scene_coords.x, scene_coords.y, scene_coords.z, true, true, false)
+    SetEntityHeading(entity, rotation.z)
 
-    local scene_coords = GetOffsetFromEntityInWorldCoords(gold, 0.0, 0.0, 0.0)
+    local offset_scene_coords = GetOffsetFromEntityInWorldCoords(entity, 0.0, 0.0, 0.0)
+    -- local offset_camera_coords = GetOffsetFromEntityInWorldCoords(playerPed, 1.5, 0.0, 0.5)
 
-    -- CreateCameraAndRender(973.6738, -2995.3264, -47.5518, 142.6543, 60.0)
+    local player_bag = CreateObject(`ch_p_m_bag_var07_arm_s`, offset_scene_coords.x, offset_scene_coords.y, offset_scene_coords.z, true, true, false)
 
-    local bag_for_gold = CreateObject(`ch_p_m_bag_var07_arm_s`, scene_coords.x, scene_coords.y, scene_coords.z, true, true, false)
-
-    local start_gold_picking_scene = NetworkCreateSynchronisedScene(scene_coords.x, scene_coords.y, scene_coords.z, rotation.x, rotation.y, rotation.z, 2, true, false, 1065353216, 0, 1065353216)
+    local introScene = NetworkCreateSynchronisedScene(offset_scene_coords.x, offset_scene_coords.y, offset_scene_coords.z, rotation.x, rotation.y, rotation.z, 2, true, false, 1065353216, 0, 1065353216)
     
-    NetworkAddPedToSynchronisedScene(playerPed, start_gold_picking_scene, animDict, "enter", 1.5, -4.0, 2, 16, 1148846080, 0)
-    NetworkAddEntityToSynchronisedScene(bag_for_gold, start_gold_picking_scene, animDict, "enter_bag", 1.0, 1.0, 1)
+    NetworkAddPedToSynchronisedScene(playerPed, introScene, animDict, "enter", 1.5, -4.0, 2, 16, 1148846080, 0)
+    NetworkAddEntityToSynchronisedScene(player_bag, introScene, animDict, "enter_bag", 1.0, 1.0, 1)
     
-    NetworkStartSynchronisedScene(start_gold_picking_scene)
     
-    local start_gold_scene_timer = GetAnimDuration(animDict, "enter") * 1000
-    Citizen.Wait(start_gold_scene_timer)
+    NetworkStartSynchronisedScene(introScene)
+    -- CreateCameraAndRender(offset_camera_coords.x, offset_camera_coords.y, offset_camera_coords.z, scene_information.heading, 75.0)
     
-    local grab_gold_scene = NetworkCreateSynchronisedScene(scene_coords.x, scene_coords.y, scene_coords.z, rotation.x, rotation.y, rotation.z, 2, true, true, 1065353216, 0, 1065353216)
+    local introSceneTimer = GetAnimDuration(animDict, "enter") * 1000
+    Citizen.Wait(introSceneTimer)
     
-    NetworkAddPedToSynchronisedScene(playerPed, grab_gold_scene, animDict, "grab", 1.5, -4.0, 2, 16, 1148846080, 0)
-    NetworkAddEntityToSynchronisedScene(bag_for_gold, grab_gold_scene, animDict, "grab_bag", 1.0, 1.0, 1)
-    NetworkAddEntityToSynchronisedScene(gold, grab_gold_scene, animDict, "grab_gold", 1.0, 1.0, 1)
+    local grabScene = NetworkCreateSynchronisedScene(offset_scene_coords.x, offset_scene_coords.y, offset_scene_coords.z, rotation.x, rotation.y, rotation.z, 2, true, true, 1065353216, 0, 1065353216)
     
-    NetworkStartSynchronisedScene(grab_gold_scene)
+    NetworkAddPedToSynchronisedScene(playerPed, grabScene, animDict, "grab", 1.5, -4.0, 2, 16, 1148846080, 0)
+    NetworkAddEntityToSynchronisedScene(player_bag, grabScene, animDict, "grab_bag", 1.0, 1.0, 1)
+    NetworkAddEntityToSynchronisedScene(entity, grabScene, animDict, "grab_"..entity_for_scene, 1.0, 1.0, 1)
     
-    local grab_scene_timer = GetAnimDuration(animDict, "grab") * 1000
-    Citizen.Wait(grab_scene_timer)
+    NetworkStartSynchronisedScene(grabScene)
+    
+    local grabSceneTimer = GetAnimDuration(animDict, "grab") * 1000
+    Citizen.Wait(grabSceneTimer)
 
-    local close_gold_scene = NetworkCreateSynchronisedScene(scene_coords.x, scene_coords.y, scene_coords.z, rotation.x, rotation.y, rotation.z, 2, true, true, 1065353216, 0, 1065353216)
+    local closeScene = NetworkCreateSynchronisedScene(offset_scene_coords.x, offset_scene_coords.y, offset_scene_coords.z, rotation.x, rotation.y, rotation.z, 2, true, true, 1065353216, 0, 1065353216)
     
-    NetworkAddPedToSynchronisedScene(playerPed, close_gold_scene, animDict, "exit", 1.5, -4.0, 2, 16, 1148846080, 0)
-    NetworkAddEntityToSynchronisedScene(bag_for_gold, close_gold_scene, animDict, "exit_bag", 1.0, 1.0, 1)
+    NetworkAddPedToSynchronisedScene(playerPed, closeScene, animDict, "exit", 1.5, -4.0, 2, 16, 1148846080, 0)
+    NetworkAddEntityToSynchronisedScene(player_bag, closeScene, animDict, "exit_bag", 1.0, 1.0, 1)
 
-    NetworkStartSynchronisedScene(close_gold_scene)
+    NetworkStartSynchronisedScene(closeScene)
 
-    local closing_scene = GetAnimDuration(animDict, "exit") * 1000
-    Citizen.Wait(closing_scene)
+    local closeSceneTimer = GetAnimDuration(animDict, "exit") * 1000
+    Citizen.Wait(closeSceneTimer)
 
-    NetworkStopSynchronisedScene(close_gold_scene)
-
+    NetworkStopSynchronisedScene(closeScene)
+    
     -- StopCameraRender()
-    -- DeleteEntity(data[1])
-    DeleteEntity(data[2])
-    DeleteEntity(bag_for_gold)
 
+    -- DeleteEntity(scene_information.table_object)
+    DeleteEntity(scene_information.prop)
+    DeleteEntity(player_bag)
+    RemoveBlip(scene_information.blip)
 end)

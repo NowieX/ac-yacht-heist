@@ -77,15 +77,7 @@ Config.HeistLocations = {
 
     Yacht_location = {
         yacht_coords = vec3(-1419.2977, 6753.5186, 11.9082),
-        target_label = "Pak goud",
-    }
-}
-
-Config.LootTrolleys = {
-    {
-        coords = vec3(-1386.9408, 6740.5083, 8.9715),
-        heading = 70.5634,
-        
+        target_label = "Pak",
     }
 }
 

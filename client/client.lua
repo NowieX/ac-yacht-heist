@@ -1,4 +1,5 @@
-local gold_tables = require "client.gold_tables"
+local prop_tables = require "client.prop_tables"
+local delete_props = false
 
 --- @param blip_x number
 --- @param blip_y number
@@ -50,6 +51,18 @@ local function PlayerIsInRange(player, coords)
     end
 end
 
+local function PlayerOutRange(player, coords)
+    while true do
+        Citizen.Wait(1500)
+        local player_coords = GetEntityCoords(player)
+        local distance = #(coords - player_coords)
+
+        if distance > 200 then
+            return true
+        end
+    end
+end
+
 local function TeleportPlayerToLocation(player_coords, player_heading)
     local playerPed = GetPlayerPed(-1)
     DoScreenFadeOut(Config.HeistInformation['BlackScreenTimer'])
@@ -60,42 +73,57 @@ local function TeleportPlayerToLocation(player_coords, player_heading)
     DoScreenFadeIn(Config.HeistInformation['BlackScreenTimer'])
 end
 
-local gold_picking_zones = {}
+local all_picking_zones = {}
 
-local function CreateGoldTables(coords, heading, target_name)
+--- @param coords vector3
+---@param heading number
+---@param target_name string
+---@param kind_prop string
+local function CreateGoldTables(coords, heading, target_name, kind_prop)
+    local grab_blip = CreateBlip(coords.x, coords.y, coords.z, 108, 0.7, 46, false, kind_prop.." ".."pakken")
+
+    local translation
+
+    if kind_prop == "cash" then
+        translation = "geld"
+    else
+        translation = "goud"
+    end
+
+    local object = "h4_prop_h4_"..kind_prop.."_stack_01a"
+
     local table_object = CreateObject(`h4_prop_h4_table_isl_01a`, coords.x, coords.y, coords.z, true, true, false)
     SetEntityHeading(table_object, heading)
-    
-    local gold_object_coords = GetOffsetFromEntityInWorldCoords(table_object, 0.0, -0.2, -0.053)
-    local gold_object = CreateObject(`h4_prop_h4_gold_stack_01a`, gold_object_coords.x, gold_object_coords.y, gold_object_coords.z, true, true, false)
-    SetEntityHeading(gold_object, heading)
+
+    local object_coords = GetOffsetFromEntityInWorldCoords(table_object, 0.0, -0.2, -0.053)
+    local prop = CreateObject(GetHashKey(object), object_coords.x, object_coords.y, object_coords.z, true, true, false)
+    SetEntityHeading(prop, heading)
     PlaceObjectOnGroundProperly(table_object)
 
-    Gold_picking_Zone = exports.ox_target:addBoxZone({
-        coords = vec3(gold_object_coords.x, gold_object_coords.y, gold_object_coords.z),
+    local picking_zone = exports.ox_target:addBoxZone({
+        coords = vec3(object_coords.x, object_coords.y, object_coords.z),
         size = vec3(1, 1, 1),
         rotation = 360,
         debug = Config.Debugger,
         options = {
             {
                 onSelect = function ()
-                    local zone = gold_picking_zones[target_name]
+                    local zone = all_picking_zones[target_name]
                     if zone then
                         exports.ox_target:removeZone(zone)
-                        gold_picking_zones[target_name] = nil
+                        all_picking_zones[target_name] = nil
                     end
-                    TriggerEvent('ac-yacht-heist:client:StartPickingGoldScene', {table_object, gold_object, gold_object_coords, heading})
+                    TriggerEvent('ac-yacht-heist:client:StartPickingScene', {table_object, prop, object_coords, heading, kind_prop, grab_blip})
                 end,
                 distance = Config.GeneralTargetDistance,
                 icon = 'fa fa-sack-dollar',
-                label = Config.HeistLocations.Yacht_location.target_label,
+                label = Config.HeistLocations.Yacht_location.target_label.." "..translation,
                 name = target_name,
             },
         }
     })
-    gold_picking_zones[target_name] = Gold_picking_Zone
+    all_picking_zones[target_name] = picking_zone
 end
-
 
 CreateThread(function()
     AddDoorToSystem(`door_camera_building`, `v_ilev_rc_door2`, 1005.2922363281, -2998.2661132812, -47.496891021729, false, false, false)
@@ -264,16 +292,32 @@ RegisterNetEvent("ac-yacht-heist:client:GoToYacht", function (NetworkId)
     })
 
     if PlayerIsInRange(playerPed, Config.HeistLocations.Yacht_location.yacht_coords) then
-        for index=1, #gold_tables do
-            CreateGoldTables(gold_tables[index].coords, gold_tables[index].heading, gold_tables[index])
+        delete_props = true
+        for index=1, #prop_tables do
+            CreateGoldTables(prop_tables[index].coords, prop_tables[index].heading, prop_tables[index], prop_tables[index].type_object)
+        end
+    end
+end)
+
+CreateThread(function()
+    while true do
+        Citizen.Wait(1000)
+        print("Delete props? ", delete_props)
+        if not delete_props then return end
+        local playerPed = GetPlayerPed(-1)
+        local player_coords = GetEntityCoords(playerPed)
+        if PlayerOutRange(playerPed, player_coords) then
+            for i=1, #scene_table_objects do
+                DeleteEntity(scene_table_objects[i])
+            end
         end
     end
 end)
 
 RegisterCommand('test_yacht', function ()
     if PlayerIsInRange(GetPlayerPed(-1), Config.HeistLocations.Yacht_location.yacht_coords) then
-        for index=1, #gold_tables do
-            CreateGoldTables(gold_tables[index].coords, gold_tables[index].heading, gold_tables[index])
+        for index=1, #prop_tables do
+            CreateGoldTables(prop_tables[index].coords, prop_tables[index].heading, prop_tables[index], prop_tables[index].type_object)
         end
     end
 end, false)
