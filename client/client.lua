@@ -42,7 +42,7 @@ local function PlayerIsInRange(player, coords)
         local player_coords = GetEntityCoords(player)
         local distance = #(coords - player_coords)
 
-        if distance < 200 then
+        if distance < 400 then
             return true
         end
     end
@@ -56,6 +56,10 @@ local function TeleportPlayerToLocation(player_coords, player_heading)
     SetEntityCoords(playerPed, player_coords.x, player_coords.y, player_coords.z, true, false, false, false)
     Citizen.Wait(Config.HeistInformation['BlackScreenTimer'])
     DoScreenFadeIn(Config.HeistInformation['BlackScreenTimer'])
+end
+
+local function SpawnLootTables(coords, heading)
+    
 end
 
 CreateThread(function()
@@ -94,7 +98,6 @@ CreateThread(function()
             },
         }
     })
-    
 end)
 
 RegisterNetEvent('ac-yacht-heist:client:OpenMenuHeist', function ()
@@ -147,7 +150,7 @@ RegisterNetEvent("ac-yacht-heist:client:EnterCameraBuilding", function (entrance
 
     TeleportPlayerToLocation(vec3(1004.1747, -2997.6816, -47.6471), 82.7456)
 
-    local security_panel = CreateObject(`hei_prop_hei_securitypanel`, security_panel_coords.x, security_panel_coords.y, security_panel_coords.z, true, true, false)
+    security_panel = CreateObject(`hei_prop_hei_securitypanel`, security_panel_coords.x, security_panel_coords.y, security_panel_coords.z, true, true, false)
     SetEntityHeading(security_panel, Config.HeistLocations.Security_panel_hack_scene.scene_rotation.z)
 
     Hacking_Zone = exports.ox_target:addBoxZone({
@@ -184,7 +187,9 @@ RegisterNetEvent("ac-yacht-heist:client:ExitCameraBuilding", function ()
         options = {
             {
                 onSelect = function ()
+                    DeleteEntity(security_panel)
                     TeleportPlayerToLocation(vec3(-297.6677, 6391.5552, 30.6124), 123.6319)
+                    dinghy_blip = CreateBlip(Config.HeistLocations.Boat_Pickup_Location.boat_coords.x, Config.HeistLocations.Boat_Pickup_Location.boat_coords.y, Config.HeistLocations.Boat_Pickup_Location.boat_coords.z, 404, 1.2, 59, true, "Dinghy")
                     TriggerServerEvent("ac-yacht-heist:server:SpawnBoatToSteal")
                 end,
                 distance = Config.GeneralTargetDistance,
@@ -194,3 +199,49 @@ RegisterNetEvent("ac-yacht-heist:client:ExitCameraBuilding", function ()
         }
     })
 end)
+
+RegisterNetEvent("ac-yacht-heist:client:GoToYacht", function (NetworkId)
+    Wait(100) -- Wait for the vehicle to be created, then pass the NetworkId to the client and convert it to an entity id
+    local playerPed = GetPlayerPed(-1)
+    RemoveBlip(dinghy_blip)
+
+    local boat = NetworkGetEntityFromNetworkId(NetworkId)
+    SetBoatAnchor(boat, true)
+    
+    while true do
+        Citizen.Wait(2000)
+        local player_coords = GetEntityCoords(playerPed)
+        local closest_vehicle = ESX.Game.GetClosestVehicle(player_coords)
+        
+        if closest_vehicle and GetVehiclePedIsIn(playerPed, false) == boat then
+            break
+        end
+    end
+
+    yacht_blip = CreateBlip(Config.HeistLocations.Yacht_location.yacht_coords.x, Config.HeistLocations.Yacht_location.yacht_coords.y, Config.HeistLocations.Yacht_location.yacht_coords.z, 455, 1.3, 59, false, "Jacht")
+
+    lib.notify({
+        title = Config.HeistNPC.boss_title,
+        description = Config.HeistLocations.Boat_Pickup_Location.notification.label,
+        duration = Config.HeistLocations.Boat_Pickup_Location.notification.timer, 
+        position = Config.Notifies.position,
+        type = 'info'
+    })
+
+    if PlayerIsInRange(playerPed, Config.HeistLocations.Yacht_location.yacht_coords) then
+        SpawnLootTables()
+    end
+end)
+
+RegisterCommand('check_yacht', function ()
+    local playerPed = PlayerPedId
+    if PlayerIsInRange(playerPed, Config.HeistLocations.Yacht_location.yacht_coords) then
+        lib.notify({
+            title = "Test",
+            description = "Speler is in de range van de boot en nu kunnen de tafels met geld ingespawned worden.",
+            duration = 10000, 
+            position = "top-right",
+            type = 'info'
+        })
+    end
+end, false)
