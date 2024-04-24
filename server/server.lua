@@ -177,3 +177,7 @@ RegisterNetEvent("ac-yacht-heist:server:RemoveActivePlayersFromTable", function 
     heistPlayers = {}
     StartHeistCooldownTimer()
 end)
+
+RegisterNetEvent("ac-yacht-heist:server:GivePlayerReward", function ()
+    
+end)

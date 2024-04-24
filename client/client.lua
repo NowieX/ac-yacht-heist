@@ -1,5 +1,21 @@
 local prop_tables = require "client.prop_tables"
-local delete_props = false
+local scene_objects_to_remove = {}
+local blips_to_remove = {}
+
+function print_table(tbl, indent)
+    indent = indent or 0
+    local spaces = string.rep(" ", indent)
+
+    for key, value in pairs(tbl) do
+        if type(value) == "table" then
+            print(spaces .. tostring(key) .. " = {")
+            print_table(value, indent + 4)
+            print(spaces .. "}")
+        else
+            print(spaces .. tostring(key) .. " = " .. tostring(value))
+        end
+    end
+end
 
 --- @param blip_x number
 --- @param blip_y number
@@ -39,28 +55,19 @@ function CreatePoliceReport(player, message, message_head)
     })
 end
 
-local function PlayerIsInRange(player, coords)
-    while true do
-        Citizen.Wait(1500)
-        local player_coords = GetEntityCoords(player)
-        local distance = #(coords - player_coords)
+-- - @param player_coords vector3
+-- - @param coords vector3
+local function PlayerIsInRange(player_coords, coords)
+    local distance = #(player_coords - coords)
 
-        if distance < 400 then
-            return true
-        end
-    end
+    return distance < 400.0
 end
 
-local function PlayerOutRange(player, coords)
-    while true do
-        Citizen.Wait(1500)
-        local player_coords = GetEntityCoords(player)
-        local distance = #(coords - player_coords)
-
-        if distance > 200 then
-            return true
-        end
-    end
+--- @param player_coords vector3
+--- @param coords vector3
+local function PlayerOutRange(player_coords, coords)
+    local distance = #(player_coords - coords)
+    return distance > 200.0
 end
 
 local function TeleportPlayerToLocation(player_coords, player_heading)
@@ -77,28 +84,32 @@ local all_picking_zones = {}
 
 --- @param coords vector3
 ---@param heading number
----@param target_name string
+---@param target_name table
 ---@param kind_prop string
 local function CreateGoldTables(coords, heading, target_name, kind_prop)
-    local grab_blip = CreateBlip(coords.x, coords.y, coords.z, 108, 0.7, 46, false, kind_prop.." ".."pakken")
-
     local translation
-
+    
     if kind_prop == "cash" then
-        translation = "geld"
+        translation = "Geld"
     else
-        translation = "goud"
+        translation = "Goud"
     end
+
+    local grab_blip = CreateBlip(coords.x, coords.y, coords.z, 108, 0.7, 46, false, translation.." ".."pakken")
 
     local object = "h4_prop_h4_"..kind_prop.."_stack_01a"
 
     local table_object = CreateObject(`h4_prop_h4_table_isl_01a`, coords.x, coords.y, coords.z, true, true, false)
     SetEntityHeading(table_object, heading)
-
+    
     local object_coords = GetOffsetFromEntityInWorldCoords(table_object, 0.0, -0.2, -0.053)
     local prop = CreateObject(GetHashKey(object), object_coords.x, object_coords.y, object_coords.z, true, true, false)
     SetEntityHeading(prop, heading)
     PlaceObjectOnGroundProperly(table_object)
+
+    table.insert(scene_objects_to_remove, prop)
+    table.insert(scene_objects_to_remove, table_object)
+    table.insert(blips_to_remove, grab_blip)
 
     local picking_zone = exports.ox_target:addBoxZone({
         coords = vec3(object_coords.x, object_coords.y, object_coords.z),
@@ -108,6 +119,26 @@ local function CreateGoldTables(coords, heading, target_name, kind_prop)
         options = {
             {
                 onSelect = function ()
+                    local playerPed = PlayerPedId()
+                    
+                    while true do
+                        Wait(100)
+                        local pedCurrentWeapon = GetCurrentPedWeapon(playerPed, true)
+                        
+                        if pedCurrentWeapon then
+                            lib.notify({
+                                title = Config.HeistNPC.boss_title,
+                                description = Config.HeistLocations.Yacht_location.cant_pick_with_weapon.label,
+                                duration = Config.HeistLocations.Yacht_location.cant_pick_with_weapon.timer, 
+                                position = Config.Notifies.position,
+                                type = 'warning'
+                            })
+                            return
+                        else
+                            break
+                        end
+                    end
+
                     local zone = all_picking_zones[target_name]
                     if zone then
                         exports.ox_target:removeZone(zone)
@@ -117,7 +148,7 @@ local function CreateGoldTables(coords, heading, target_name, kind_prop)
                 end,
                 distance = Config.GeneralTargetDistance,
                 icon = 'fa fa-sack-dollar',
-                label = Config.HeistLocations.Yacht_location.target_label.." "..translation,
+                label = translation.." "..Config.HeistLocations.Yacht_location.pick_items,
                 name = target_name,
             },
         }
@@ -272,7 +303,7 @@ RegisterNetEvent("ac-yacht-heist:client:GoToYacht", function (NetworkId)
     SetBoatAnchor(boat, true)
     
     while true do
-        Citizen.Wait(2000)
+        Citizen.Wait(150)
         local player_coords = GetEntityCoords(playerPed)
         local closest_vehicle = ESX.Game.GetClosestVehicle(player_coords)
         
@@ -291,33 +322,41 @@ RegisterNetEvent("ac-yacht-heist:client:GoToYacht", function (NetworkId)
         type = 'info'
     })
 
-    if PlayerIsInRange(playerPed, Config.HeistLocations.Yacht_location.yacht_coords) then
-        delete_props = true
-        for index=1, #prop_tables do
-            CreateGoldTables(prop_tables[index].coords, prop_tables[index].heading, prop_tables[index], prop_tables[index].type_object)
-        end
-    end
+    TriggerEvent('ac-yacht-heist:client:CheckPlayerInRangeYacht')
+
 end)
 
-CreateThread(function()
-    while true do
-        Citizen.Wait(1000)
-        print("Delete props? ", delete_props)
-        if not delete_props then return end
-        local playerPed = GetPlayerPed(-1)
-        local player_coords = GetEntityCoords(playerPed)
-        if PlayerOutRange(playerPed, player_coords) then
-            for i=1, #scene_table_objects do
-                DeleteEntity(scene_table_objects[i])
+RegisterNetEvent("ac-yacht-heist:client:CheckPlayerInRangeYacht", function()
+    Citizen.CreateThread(function ()
+        local playerPed = PlayerPedId()
+        local coords = Config.HeistLocations.Yacht_location.yacht_coords
+        local goldBarsHasSpawned = false
+        
+        while true do
+            local get_player_coords = GetEntityCoords(playerPed)
+
+            if PlayerIsInRange(get_player_coords, coords) and not goldBarsHasSpawned then
+                for index=1, #prop_tables do
+                    CreateGoldTables(prop_tables[index].coords, prop_tables[index].heading, prop_tables[index], prop_tables[index].type_object)
+                end
+
+                goldBarsHasSpawned = true
             end
+
+            if PlayerOutRange(get_player_coords, coords) and goldBarsHasSpawned then
+                for object=1, #scene_objects_to_remove do
+                    DeleteEntity(scene_objects_to_remove[object])
+                    RemoveBlip(blips_to_remove[object])
+                end
+                break
+            end
+
+            Citizen.Wait(150)
         end
-    end
+        TriggerEvent("ac-yacht-heist:client:HeistStopped")
+    end)
 end)
 
-RegisterCommand('test_yacht', function ()
-    if PlayerIsInRange(GetPlayerPed(-1), Config.HeistLocations.Yacht_location.yacht_coords) then
-        for index=1, #prop_tables do
-            CreateGoldTables(prop_tables[index].coords, prop_tables[index].heading, prop_tables[index], prop_tables[index].type_object)
-        end
-    end
-end, false)
+RegisterNetEvent('ac-yacht-heist:client:HeistStopped', function ()
+    -- Zorgen dat de heist beeindigd wordt, de speler heeft als het goed is alle gold of is weg gegaan van de boot.
+end)

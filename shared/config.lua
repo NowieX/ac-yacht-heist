@@ -77,7 +77,11 @@ Config.HeistLocations = {
 
     Yacht_location = {
         yacht_coords = vec3(-1419.2977, 6753.5186, 11.9082),
-        target_label = "Pak",
+        pick_items = "pakken",
+        cant_pick_with_weapon = {
+            label = "Je kan niks pakken als je een wapen vast hebt!",
+            timer = 10000,
+        }
     }
 }
 

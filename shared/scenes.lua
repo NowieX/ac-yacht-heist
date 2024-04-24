@@ -101,8 +101,6 @@ RegisterNetEvent('ac-yacht-heist:client:StartHackCamera', function()
     DeleteEntity(security_panel)
 end)
 
-scene_table_objects = {}
-
 RegisterNetEvent('ac-yacht-heist:client:StartPickingScene', function (data)
     local scene_information = {
         table_object = data[1],
@@ -112,14 +110,13 @@ RegisterNetEvent('ac-yacht-heist:client:StartPickingScene', function (data)
         kind_prop = data[5],
         blip = data[6]
     }
-
-    table.insert(scene_table_objects, scene_information.table_object)
-    table.insert(scene_table_objects, scene_information.prop)
     
     DeleteEntity(scene_information.prop)
+    
     local entity_for_scene = scene_information.kind_prop
-
+    
     local playerPed = PlayerPedId()
+
     local scene_coords = vec3(scene_information.object_coords.x, scene_information.object_coords.y, scene_information.object_coords.z)
     local rotation = vec3(0.0, 0.0, scene_information.heading)
     local animDict = "anim@scripted@player@mission@tun_table_grab@"..entity_for_scene.."@"
