@@ -1,6 +1,7 @@
 local prop_tables = require "client.prop_tables"
 local scene_objects_to_remove = {}
 local blips_to_remove = {}
+local gold_bars_robbed = false
 
 --- @param blip_x number
 --- @param blip_y number
@@ -339,7 +340,7 @@ RegisterNetEvent("ac-yacht-heist:client:CheckPlayerInRangeYacht", function(yacht
                 goldBarsHasSpawned = true
             end
 
-            if PlayerOutRange(get_player_coords, coords) and goldBarsHasSpawned then
+            if PlayerOutRange(get_player_coords, coords) and goldBarsHasSpawned or gold_bars_robbed then
                 TriggerEvent("ac-yacht-heist:client:RemoveTablesAndBlips")
                 break
             end
@@ -359,4 +360,5 @@ RegisterNetEvent('ac-yacht-heist:client:HeistStopped', function (yacht_blip)
         position = Config.Notifies.position,
         type = 'info'
     })
+    TriggerServerEvent("ac-yacht-heist:server:RemoveActivePlayersFromTable")
 end)

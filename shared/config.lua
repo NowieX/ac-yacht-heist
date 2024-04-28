@@ -1,7 +1,5 @@
 Config = {}
 
-Config.Debugger = false
-
 Config.GeneralTargetDistance = 1.5
 
 Config.HeistNPC = {

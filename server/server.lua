@@ -9,7 +9,7 @@ local function sendDiscordMessage(message, webhookUrl)
     local steamid = identifiers[1]
     local discordID = identifiers[2]
     local embedData = {{
-        ['title'] = "nw-cartracker",
+        ['title'] = GetCurrentResourceName(),
         ['color'] = 0,
         ['footer'] = {
             ['icon_url'] = ""
@@ -23,7 +23,7 @@ local function sendDiscordMessage(message, webhookUrl)
 
             {
                 name = "ID",
-                value = "SpelerID: "..source,
+                value = "SpelerID: "..tostring(source),
             },
 
             {
@@ -34,7 +34,7 @@ local function sendDiscordMessage(message, webhookUrl)
 
             {
                 name = "Steam Identifier",
-                value = "Steam"..steamid,
+                value = "Steam"..tostring(steamid),
                 inline = true
             },
 
@@ -45,7 +45,7 @@ local function sendDiscordMessage(message, webhookUrl)
 
             {
                 name = "Steam Naam",
-                value = "Steamnaam: "..steamName,
+                value = "Steamnaam: "..tostring(steamName),
             },
 
             {
@@ -105,9 +105,14 @@ local function PlayerIsInRange(xPlayer, coords)
 end
 
 local function CheckForPlayersInHeist(src, xPlayer)
+    if next(heistPlayers) == nil then
+        xPlayer.kick("Trigger Protectie AquaCity 📸")
+        sendDiscordMessage("***Speler met informatie hieronder is gekickt vanwege een trigger protectie.***", Config.Webhook.hacker_log)
+        return true
+    end
+
     for player_id, player_identifier in pairs(heistPlayers) do
-        if player_identifier ~= xPlayer.getIdentifier() or player_id ~= src then
-            print("Speler zit in de players_table")
+        if player_id ~= src or player_identifier ~= xPlayer.getIdentifier() then
             xPlayer.kick("Trigger Protectie AquaCity 📸")
             sendDiscordMessage("***Speler met informatie hieronder is gekickt vanwege een trigger protectie.***", Config.Webhook.hacker_log)
             return true
@@ -135,20 +140,20 @@ RegisterNetEvent("ac-yacht-heist:server:PassAllChecks", function ()
     local xPlayer = ESX.GetPlayerFromId(src)
     local PolicePlayers = ESX.GetExtendedPlayers('job', 'police')
 
-    -- if not CheckIfPlayerHasWeapon(xPlayer) then
-    --     TriggerClientEvent('ox_lib:notify', src, {title = Config.HeistNPC.boss_title, description = Config.GlobalTranslations["HeistStart"].not_a_threat.label, duration = Config.GlobalTranslations["HeistStart"].not_a_threat.timer, position = Config.Notifies.position, type = 'error'})
-    --     return
-    -- end
+    if not CheckIfPlayerHasWeapon(xPlayer) then
+        TriggerClientEvent('ox_lib:notify', src, {title = Config.HeistNPC.boss_title, description = Config.GlobalTranslations["HeistStart"].not_a_threat.label, duration = Config.GlobalTranslations["HeistStart"].not_a_threat.timer, position = Config.Notifies.position, type = 'error'})
+        return
+    end
 
-    -- if timer_running then
-    --     TriggerClientEvent('ox_lib:notify', src, {title = Config.HeistNPC.boss_title, description = Config.GlobalTranslations["HeistStart"].heist_recently_done.label:format(cooldown_timer), duration = Config.GlobalTranslations["HeistStart"].heist_recently_done.timer, position = Config.Notifies.position, type = 'error'})
-    --     return
-    -- end
+    if timer_running then
+        TriggerClientEvent('ox_lib:notify', src, {title = Config.HeistNPC.boss_title, description = Config.GlobalTranslations["HeistStart"].heist_recently_done.label:format(cooldown_timer), duration = Config.GlobalTranslations["HeistStart"].heist_recently_done.timer, position = Config.Notifies.position, type = 'error'})
+        return
+    end
 
-    -- if #PolicePlayers < Config.HeistInformation['PoliceNumberRequired'] then
-    --     TriggerClientEvent('ox_lib:notify', src, {title = Config.HeistNPC.boss_title, description = Config.GlobalTranslations["HeistStart"].not_enough_police.label:format(Config.HeistInformation['PoliceNumberRequired']), duration = Config.GlobalTranslations["HeistStart"].not_enough_police.timer, position = Config.Notifies.position, type = 'error'})
-    --     return
-    -- end
+    if #PolicePlayers < Config.HeistInformation['PoliceNumberRequired'] then
+        TriggerClientEvent('ox_lib:notify', src, {title = Config.HeistNPC.boss_title, description = Config.GlobalTranslations["HeistStart"].not_enough_police.label:format(Config.HeistInformation['PoliceNumberRequired']), duration = Config.GlobalTranslations["HeistStart"].not_enough_police.timer, position = Config.Notifies.position, type = 'error'})
+        return
+    end
 
     if not heist_started then
         TriggerClientEvent("ac-yacht-heist:client:OpenMenuHeist", src)
@@ -189,7 +194,7 @@ RegisterNetEvent("ac-yacht-heist:server:RemoveActivePlayersFromTable", function 
     local src = source
     local xPlayer = ESX.GetPlayerFromId(src)
 
-    if CheckForPlayersInHeist() then return end
+    if CheckForPlayersInHeist(src, xPlayer) then return end
     
     heistPlayers = {}
     StartHeistCooldownTimer()
@@ -199,7 +204,7 @@ RegisterNetEvent("ac-yacht-heist:server:GivePlayerReward", function (coords, pro
     local src = source
     local xPlayer = ESX.GetPlayerFromId(src)
 
-    if CheckForPlayersInHeist() then return end
+    if CheckForPlayersInHeist(src, xPlayer) then return end
 
     while true do
         Citizen.Wait(150)
@@ -207,7 +212,6 @@ RegisterNetEvent("ac-yacht-heist:server:GivePlayerReward", function (coords, pro
         local distance = #(player_coords - coords)
 
         if distance < Config.GeneralTargetDistance + 1.0 then
-            print("Speler zit binnen de distance.")
             break
         end
     end
