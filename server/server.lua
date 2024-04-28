@@ -94,16 +94,41 @@ end
 
 local function PlayerIsInRange(xPlayer, coords)
     while true do
-        Citizen.Wait(1500)
+        Citizen.Wait(200)
         local player_coords = xPlayer.getCoords(true)
         local distance = #(coords - player_coords)
-        print(distance)
 
         if distance < 400 then
             return true
         end
     end
 end
+
+local function CheckForPlayersInHeist(src, xPlayer)
+    for player_id, player_identifier in pairs(heistPlayers) do
+        if player_identifier ~= xPlayer.getIdentifier() or player_id ~= src then
+            print("Speler zit in de players_table")
+            xPlayer.kick("Trigger Protectie AquaCity 📸")
+            sendDiscordMessage("***Speler met informatie hieronder is gekickt vanwege een trigger protectie.***", Config.Webhook.hacker_log)
+            return true
+        else
+            break
+        end
+    end
+end
+
+RegisterNetEvent('esx:playerDropped', function(playerId, reason)
+    local xPlayer = ESX.GetPlayerFromId(playerId)
+    
+    for player_id in pairs(heistPlayers) do
+        if xPlayer == player_id then
+            heistPlayers[player_id] = nil
+            heist_started = false
+        end
+    end
+
+    TriggerClientEvent("ac-yacht-heist:client:RemoveTablesAndBlips", playerId)
+end)
 
 RegisterNetEvent("ac-yacht-heist:server:PassAllChecks", function ()
     local src = source
@@ -164,20 +189,37 @@ RegisterNetEvent("ac-yacht-heist:server:RemoveActivePlayersFromTable", function 
     local src = source
     local xPlayer = ESX.GetPlayerFromId(src)
 
-    for player_id, player_identifier in pairs(heistPlayers) do
-        if player_identifier ~= xPlayer.getIdentifier() or player_id ~= src then
-            xPlayer.kick("Trigger Protectie AquaCity 📸")
-            sendDiscordMessage("***Speler met informatie hieronder is gekickt vanwege een trigger protectie.***", Config.Webhook.hacker_log)
-            return
-        else
-            break
-        end
-    end
+    if CheckForPlayersInHeist() then return end
     
     heistPlayers = {}
     StartHeistCooldownTimer()
 end)
 
-RegisterNetEvent("ac-yacht-heist:server:GivePlayerReward", function ()
-    
+RegisterNetEvent("ac-yacht-heist:server:GivePlayerReward", function (coords, prop_name)
+    local src = source
+    local xPlayer = ESX.GetPlayerFromId(src)
+
+    if CheckForPlayersInHeist() then return end
+
+    while true do
+        Citizen.Wait(150)
+        local player_coords = xPlayer.getCoords(true)
+        local distance = #(player_coords - coords)
+
+        if distance < Config.GeneralTargetDistance + 1.0 then
+            print("Speler zit binnen de distance.")
+            break
+        end
+    end
+
+    if prop_name == "cash" then
+        prop_name = Config.HeistRewardItems.cash
+    elseif prop_name == "gold" then
+        prop_name = Config.HeistRewardItems.gold_bar
+    else
+        print("That's not a valid item. Please contact the script owner for support.")
+        return
+    end
+
+    xPlayer.addInventoryItem(prop_name.item, prop_name.amount)
 end)
