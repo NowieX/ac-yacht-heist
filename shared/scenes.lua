@@ -131,7 +131,6 @@ RegisterNetEvent('ac-yacht-heist:client:StartPickingScene', function (data)
     SetEntityHeading(entity, rotation.z)
 
     local offset_scene_coords = GetOffsetFromEntityInWorldCoords(entity, 0.0, 0.0, 0.0)
-    -- local offset_camera_coords = GetOffsetFromEntityInWorldCoords(playerPed, 1.5, 0.0, 0.5)
 
     local player_bag = CreateObject(`ch_p_m_bag_var07_arm_s`, offset_scene_coords.x, offset_scene_coords.y, offset_scene_coords.z, true, true, false)
 
@@ -142,7 +141,6 @@ RegisterNetEvent('ac-yacht-heist:client:StartPickingScene', function (data)
     
     
     NetworkStartSynchronisedScene(introScene)
-    -- CreateCameraAndRender(offset_camera_coords.x, offset_camera_coords.y, offset_camera_coords.z, scene_information.heading, 75.0)
     
     local introSceneTimer = GetAnimDuration(animDict, "enter") * 1000
     Citizen.Wait(introSceneTimer)
@@ -169,10 +167,9 @@ RegisterNetEvent('ac-yacht-heist:client:StartPickingScene', function (data)
     Citizen.Wait(closeSceneTimer)
 
     NetworkStopSynchronisedScene(closeScene)
-    
-    -- StopCameraRender()
 
-    -- DeleteEntity(scene_information.table_object)
+    TriggerServerEvent("ac-yacht-heist:server:GivePlayerReward", scene_information.object_coords, scene_information.kind_prop)
+
     DeleteEntity(scene_information.prop)
     DeleteEntity(player_bag)
     RemoveBlip(scene_information.blip)
