@@ -36,6 +36,11 @@ Config.Notifies = {
     position = "center-right"
 }
 
+Config.HeistRewardItems = {
+    cash = {item = 'yacht_money', amount = math.random(10000, 30000)},
+    gold_bar = {item = 'gold_bar', amount = math.random(7, 20)},
+}
+
 Config.RequiredWeapons = {
     'weapon_pistol',
     'weapon_pistol_mk2',
@@ -105,6 +110,11 @@ Config.GlobalTranslations = {
 
         not_a_threat = {
             label = "Je vormt geen bedreiging om de jacht te kunnen overvallen.",
+            timer = 10000
+        },
+
+        heist_ended = {
+            label = "Ik zie dat je weg gegaan bent van de boot, dat betekent waarschijnlijk lekkere buit! Je kan dit verkopen bij de pawn shop!",
             timer = 10000
         },
     },
