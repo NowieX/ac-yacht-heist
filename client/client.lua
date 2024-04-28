@@ -2,21 +2,6 @@ local prop_tables = require "client.prop_tables"
 local scene_objects_to_remove = {}
 local blips_to_remove = {}
 
-function print_table(tbl, indent)
-    indent = indent or 0
-    local spaces = string.rep(" ", indent)
-
-    for key, value in pairs(tbl) do
-        if type(value) == "table" then
-            print(spaces .. tostring(key) .. " = {")
-            print_table(value, indent + 4)
-            print(spaces .. "}")
-        else
-            print(spaces .. tostring(key) .. " = " .. tostring(value))
-        end
-    end
-end
-
 --- @param blip_x number
 --- @param blip_y number
 --- @param blip_z number
@@ -60,14 +45,14 @@ end
 local function PlayerIsInRange(player_coords, coords)
     local distance = #(player_coords - coords)
 
-    return distance < 400.0
+    return distance < 250.0
 end
 
 --- @param player_coords vector3
 --- @param coords vector3
 local function PlayerOutRange(player_coords, coords)
     local distance = #(player_coords - coords)
-    return distance > 200.0
+    return distance > 400.0
 end
 
 local function TeleportPlayerToLocation(player_coords, player_heading)
@@ -303,7 +288,7 @@ RegisterNetEvent("ac-yacht-heist:client:GoToYacht", function (NetworkId)
     SetBoatAnchor(boat, true)
     
     while true do
-        Citizen.Wait(150)
+        Citizen.Wait(1000)
         local player_coords = GetEntityCoords(playerPed)
         local closest_vehicle = ESX.Game.GetClosestVehicle(player_coords)
         
@@ -312,7 +297,7 @@ RegisterNetEvent("ac-yacht-heist:client:GoToYacht", function (NetworkId)
         end
     end
 
-    yacht_blip = CreateBlip(Config.HeistLocations.Yacht_location.yacht_coords.x, Config.HeistLocations.Yacht_location.yacht_coords.y, Config.HeistLocations.Yacht_location.yacht_coords.z, 455, 1.3, 59, false, "Jacht")
+    local yacht_blip = CreateBlip(Config.HeistLocations.Yacht_location.yacht_coords.x, Config.HeistLocations.Yacht_location.yacht_coords.y, Config.HeistLocations.Yacht_location.yacht_coords.z, 455, 1.3, 59, false, "Jacht")
 
     lib.notify({
         title = Config.HeistNPC.boss_title,
@@ -322,11 +307,22 @@ RegisterNetEvent("ac-yacht-heist:client:GoToYacht", function (NetworkId)
         type = 'info'
     })
 
-    TriggerEvent('ac-yacht-heist:client:CheckPlayerInRangeYacht')
+    TriggerEvent("ac-yacht-heist:client:CheckPlayerInRangeYacht", yacht_blip)
 
 end)
 
-RegisterNetEvent("ac-yacht-heist:client:CheckPlayerInRangeYacht", function()
+RegisterNetEvent("ac-yacht-heist:client:RemoveTablesAndBlips", function ()
+    for object=1, #scene_objects_to_remove do
+        DeleteEntity(scene_objects_to_remove[object])
+        RemoveBlip(blips_to_remove[object])
+    end
+end)
+
+RegisterCommand("test_yacht", function ()
+    TriggerEvent("ac-yacht-heist:client:CheckPlayerInRangeYacht")    
+end, false)
+
+RegisterNetEvent("ac-yacht-heist:client:CheckPlayerInRangeYacht", function(yacht_blip)
     Citizen.CreateThread(function ()
         local playerPed = PlayerPedId()
         local coords = Config.HeistLocations.Yacht_location.yacht_coords
@@ -344,19 +340,23 @@ RegisterNetEvent("ac-yacht-heist:client:CheckPlayerInRangeYacht", function()
             end
 
             if PlayerOutRange(get_player_coords, coords) and goldBarsHasSpawned then
-                for object=1, #scene_objects_to_remove do
-                    DeleteEntity(scene_objects_to_remove[object])
-                    RemoveBlip(blips_to_remove[object])
-                end
+                TriggerEvent("ac-yacht-heist:client:RemoveTablesAndBlips")
                 break
             end
 
             Citizen.Wait(150)
         end
-        TriggerEvent("ac-yacht-heist:client:HeistStopped")
+        TriggerEvent("ac-yacht-heist:client:HeistStopped", yacht_blip)
     end)
 end)
 
-RegisterNetEvent('ac-yacht-heist:client:HeistStopped', function ()
-    -- Zorgen dat de heist beeindigd wordt, de speler heeft als het goed is alle gold of is weg gegaan van de boot.
+RegisterNetEvent('ac-yacht-heist:client:HeistStopped', function (yacht_blip)
+    RemoveBlip(yacht_blip)
+    lib.notify({
+        title = Config.HeistNPC.boss_title,
+        description = Config.GlobalTranslations["HeistStart"].heist_ended.label,
+        duration = Config.GlobalTranslations["HeistStart"].heist_ended.timer, 
+        position = Config.Notifies.position,
+        type = 'info'
+    })
 end)
