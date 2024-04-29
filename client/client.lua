@@ -88,17 +88,18 @@ local function CreateGoldTables(coords, heading, target_name, kind_prop)
     local table_object = CreateObject(`h4_prop_h4_table_isl_01a`, coords.x, coords.y, coords.z, true, true, false)
     SetEntityHeading(table_object, heading)
     
-    local object_coords = GetOffsetFromEntityInWorldCoords(table_object, 0.0, -0.2, -0.053)
-    local prop = CreateObject(GetHashKey(object), object_coords.x, object_coords.y, object_coords.z, true, true, false)
+    local object_coords = GetOffsetFromEntityInWorldCoords(table_object, 0.0, -0.2, -0.057)
+    SetEntityCoords(table_object, object_coords.x, object_coords.y, object_coords.z - 1.0, false, false, false, false)
+    local prop = CreateObject(GetHashKey(object), object_coords.x, object_coords.y, object_coords.z - 0.05, true, true, false)
     SetEntityHeading(prop, heading)
-    PlaceObjectOnGroundProperly(table_object)
+    local reward_coords = GetEntityCoords(prop)
 
     table.insert(scene_objects_to_remove, prop)
     table.insert(scene_objects_to_remove, table_object)
     table.insert(blips_to_remove, grab_blip)
 
     local picking_zone = exports.ox_target:addBoxZone({
-        coords = vec3(object_coords.x, object_coords.y, object_coords.z),
+        coords = vec3(reward_coords.x, reward_coords.y, reward_coords.z),
         size = vec3(1, 1, 1),
         rotation = 360,
         debug = Config.Debugger,
@@ -130,7 +131,7 @@ local function CreateGoldTables(coords, heading, target_name, kind_prop)
                         exports.ox_target:removeZone(zone)
                         all_picking_zones[target_name] = nil
                     end
-                    TriggerEvent('ac-yacht-heist:client:StartPickingScene', {table_object, prop, object_coords, heading, kind_prop, grab_blip})
+                    TriggerEvent('ac-yacht-heist:client:StartPickingScene', {table_object, prop, reward_coords, heading, kind_prop, grab_blip})
                 end,
                 distance = Config.GeneralTargetDistance,
                 icon = 'fa fa-sack-dollar',
