@@ -92,13 +92,15 @@ local function CheckIfPlayerHasWeapon(xPlayer)
     return false
 end
 
+--- @param xPlayer number
+---@param coords vector3
 local function PlayerIsInRange(xPlayer, coords)
     while true do
-        Citizen.Wait(200)
+        Citizen.Wait(1000)
         local player_coords = xPlayer.getCoords(true)
         local distance = #(coords - player_coords)
 
-        if distance < 400 then
+        if distance < 200 then
             return true
         end
     end
