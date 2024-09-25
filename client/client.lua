@@ -131,7 +131,7 @@ local function CreateGoldTables(coords, heading, target_name, kind_prop)
                         exports.ox_target:removeZone(zone)
                         all_picking_zones[target_name] = nil
                     end
-                    TriggerEvent('ac-yacht-heist:client:StartPickingScene', {table_object, prop, reward_coords, heading, kind_prop, grab_blip})
+                    TriggerEvent('nw-yacht-heist:client:StartPickingScene', {table_object, prop, reward_coords, heading, kind_prop, grab_blip})
                 end,
                 distance = Config.GeneralTargetDistance,
                 icon = 'fa fa-sack-dollar',
@@ -172,7 +172,7 @@ CreateThread(function()
         debug = Config.Debugger,
         options = {
             {
-                serverEvent = 'ac-yacht-heist:server:PassAllChecks',
+                serverEvent = 'nw-yacht-heist:server:PassAllChecks',
                 distance = Config.GeneralTargetDistance,
                 icon = 'fa fa-ship',
                 label = Config.HeistNPC.target_label,
@@ -181,19 +181,19 @@ CreateThread(function()
     })
 end)
 
-RegisterNetEvent('ac-yacht-heist:client:OpenMenuHeist', function ()
+RegisterNetEvent('nw-yacht-heist:client:OpenMenuHeist', function ()
     SetNuiFocus(true, true)
     SendNUIMessage({
         action = "open",
     })
 end)
 
-RegisterNUICallback('ac-yacht-heist:client:CloseMenuHeist', function ()
+RegisterNUICallback('nw-yacht-heist:client:CloseMenuHeist', function ()
     SetNuiFocus(false, false)
 end)
 
-RegisterNUICallback("ac-yacht-heist:client:StartHackingPreperation", function ()
-    TriggerServerEvent("ac-yacht-heist:server:HeistStarted")
+RegisterNUICallback("nw-yacht-heist:client:StartHackingPreperation", function ()
+    TriggerServerEvent("nw-yacht-heist:server:HeistStarted")
     SetNuiFocus(false,false)
 
     lib.notify({
@@ -214,7 +214,7 @@ RegisterNUICallback("ac-yacht-heist:client:StartHackingPreperation", function ()
         options = {
             {
                 onSelect = function ()
-                    TriggerEvent('ac-yacht-heist:client:EnterCameraBuilding', hack_building_entrance_blip)
+                    TriggerEvent('nw-yacht-heist:client:EnterCameraBuilding', hack_building_entrance_blip)
                 end,
                 distance = Config.GeneralTargetDistance,
                 icon = 'fa fa-door-open',
@@ -224,7 +224,7 @@ RegisterNUICallback("ac-yacht-heist:client:StartHackingPreperation", function ()
     })
 end)
 
-RegisterNetEvent("ac-yacht-heist:client:EnterCameraBuilding", function (entrance_blip)
+RegisterNetEvent("nw-yacht-heist:client:EnterCameraBuilding", function (entrance_blip)
     RemoveBlip(entrance_blip)
     local security_panel_coords = Config.HeistLocations.Security_panel_hack_scene.scene_location
     exports.ox_target:removeZone(Camera_Building_Zone)
@@ -241,7 +241,7 @@ RegisterNetEvent("ac-yacht-heist:client:EnterCameraBuilding", function (entrance
         debug = Config.Debugger,
         options = {
             {
-                event = 'ac-yacht-heist:client:StartHackCamera',
+                event = 'nw-yacht-heist:client:StartHackCamera',
                 distance = Config.GeneralTargetDistance,
                 icon = 'fa fa-camera',
                 label = Config.HeistLocations.Security_panel_hack_scene.target_label,
@@ -250,7 +250,7 @@ RegisterNetEvent("ac-yacht-heist:client:EnterCameraBuilding", function (entrance
     })
 end)
 
-RegisterNetEvent("ac-yacht-heist:client:ExitCameraBuilding", function ()
+RegisterNetEvent("nw-yacht-heist:client:ExitCameraBuilding", function ()
 
     lib.notify({
         title = Config.HeistNPC.boss_title,
@@ -271,7 +271,7 @@ RegisterNetEvent("ac-yacht-heist:client:ExitCameraBuilding", function ()
                     DeleteEntity(security_panel)
                     TeleportPlayerToLocation(vec3(-297.6677, 6391.5552, 30.6124), 123.6319)
                     dinghy_blip = CreateBlip(Config.HeistLocations.Boat_Pickup_Location.boat_coords.x, Config.HeistLocations.Boat_Pickup_Location.boat_coords.y, Config.HeistLocations.Boat_Pickup_Location.boat_coords.z, 404, 1.2, 59, true, "Dinghy")
-                    TriggerServerEvent("ac-yacht-heist:server:SpawnBoatToSteal")
+                    TriggerServerEvent("nw-yacht-heist:server:SpawnBoatToSteal")
                 end,
                 distance = Config.GeneralTargetDistance,
                 icon = 'fa fa-door-open',
@@ -281,7 +281,7 @@ RegisterNetEvent("ac-yacht-heist:client:ExitCameraBuilding", function ()
     })
 end)
 
-RegisterNetEvent("ac-yacht-heist:client:GoToYacht", function (NetworkId)
+RegisterNetEvent("nw-yacht-heist:client:GoToYacht", function (NetworkId)
     Wait(100) -- Wait for the vehicle to be created, then pass the NetworkId to the client and convert it to an entity id
     local playerPed = GetPlayerPed(-1)
     RemoveBlip(dinghy_blip)
@@ -309,11 +309,11 @@ RegisterNetEvent("ac-yacht-heist:client:GoToYacht", function (NetworkId)
         type = 'info'
     })
 
-    TriggerEvent("ac-yacht-heist:client:CheckPlayerInRangeYacht", yacht_blip)
+    TriggerEvent("nw-yacht-heist:client:CheckPlayerInRangeYacht", yacht_blip)
 
 end)
 
-RegisterNetEvent("ac-yacht-heist:client:RemoveTablesAndBlips", function ()
+RegisterNetEvent("nw-yacht-heist:client:RemoveTablesAndBlips", function ()
     for object=1, #scene_objects_to_remove do
         DeleteEntity(scene_objects_to_remove[object])
         RemoveBlip(blips_to_remove[object])
@@ -321,10 +321,10 @@ RegisterNetEvent("ac-yacht-heist:client:RemoveTablesAndBlips", function ()
 end)
 
 RegisterCommand("test_yacht", function ()
-    TriggerEvent("ac-yacht-heist:client:CheckPlayerInRangeYacht")    
+    TriggerEvent("nw-yacht-heist:client:CheckPlayerInRangeYacht")    
 end, false)
 
-RegisterNetEvent("ac-yacht-heist:client:CheckPlayerInRangeYacht", function(yacht_blip)
+RegisterNetEvent("nw-yacht-heist:client:CheckPlayerInRangeYacht", function(yacht_blip)
     Citizen.CreateThread(function ()
         local playerPed = PlayerPedId()
         local coords = Config.HeistLocations.Yacht_location.yacht_coords
@@ -342,17 +342,17 @@ RegisterNetEvent("ac-yacht-heist:client:CheckPlayerInRangeYacht", function(yacht
             end
 
             if PlayerOutRange(get_player_coords, coords) and goldBarsHasSpawned or gold_bars_robbed then
-                TriggerEvent("ac-yacht-heist:client:RemoveTablesAndBlips")
+                TriggerEvent("nw-yacht-heist:client:RemoveTablesAndBlips")
                 break
             end
 
             Citizen.Wait(150)
         end
-        TriggerEvent("ac-yacht-heist:client:HeistStopped", yacht_blip)
+        TriggerEvent("nw-yacht-heist:client:HeistStopped", yacht_blip)
     end)
 end)
 
-RegisterNetEvent('ac-yacht-heist:client:HeistStopped', function (yacht_blip)
+RegisterNetEvent('nw-yacht-heist:client:HeistStopped', function (yacht_blip)
     RemoveBlip(yacht_blip)
     lib.notify({
         title = Config.HeistNPC.boss_title,
@@ -361,5 +361,5 @@ RegisterNetEvent('ac-yacht-heist:client:HeistStopped', function (yacht_blip)
         position = Config.Notifies.position,
         type = 'info'
     })
-    TriggerServerEvent("ac-yacht-heist:server:RemoveActivePlayersFromTable")
+    TriggerServerEvent("nw-yacht-heist:server:RemoveActivePlayersFromTable")
 end)

@@ -24,9 +24,9 @@ Config.Webhook = {
 }
 
 Config.HeistInformation = {
-    ['HeistCooldownTimer'] = 30, -- Minuten
+    ['HeistCooldownTimer'] = 30, -- Minutes
     ['PoliceNumberRequired'] = 0,
-    ['BlackScreenTimer'] = 1000, -- Tijd hoelang het duurt voordat een speler in het camera gebouw is
+    ['BlackScreenTimer'] = 1000, -- Time it takes for the person to get in the camera building.
 }
 
 Config.Notifies = {
@@ -102,7 +102,7 @@ Config.GlobalTranslations = {
         },
         
         not_enough_police = {
-            label = "Er is niet genoeg politie in dienst, er moet minimaal %s politie in dienst zijn.", -- %s erin laten, deze formateerd het aantal seconden dat iemand moet wachten voor een nieuwe heist
+            label = "Er is niet genoeg politie in dienst, er moet minimaal %s politie in dienst zijn.", -- %s erin laten, deze formateerd het aantal agenten dat in dienst moet zijn
             timer = 10000
         },
 

@@ -108,14 +108,12 @@ end
 
 local function CheckForPlayersInHeist(src, xPlayer)
     if next(heistPlayers) == nil then
-        xPlayer.kick("Trigger Protectie AquaCity 📸")
         sendDiscordMessage("***Speler met informatie hieronder is gekickt vanwege een trigger protectie.***", Config.Webhook.hacker_log)
         return true
     end
 
     for player_id, player_identifier in pairs(heistPlayers) do
         if player_id ~= src or player_identifier ~= xPlayer.getIdentifier() then
-            xPlayer.kick("Trigger Protectie AquaCity 📸")
             sendDiscordMessage("***Speler met informatie hieronder is gekickt vanwege een trigger protectie.***", Config.Webhook.hacker_log)
             return true
         else
@@ -134,10 +132,10 @@ RegisterNetEvent('esx:playerDropped', function(playerId, reason)
         end
     end
 
-    TriggerClientEvent("ac-yacht-heist:client:RemoveTablesAndBlips", playerId)
+    TriggerClientEvent("nw-yacht-heist:client:RemoveTablesAndBlips", playerId)
 end)
 
-RegisterNetEvent("ac-yacht-heist:server:PassAllChecks", function ()
+RegisterNetEvent("nw-yacht-heist:server:PassAllChecks", function ()
     local src = source
     local xPlayer = ESX.GetPlayerFromId(src)
     local PolicePlayers = ESX.GetExtendedPlayers('job', 'police')
@@ -158,32 +156,31 @@ RegisterNetEvent("ac-yacht-heist:server:PassAllChecks", function ()
     end
 
     if not heist_started then
-        TriggerClientEvent("ac-yacht-heist:client:OpenMenuHeist", src)
+        TriggerClientEvent("nw-yacht-heist:client:OpenMenuHeist", src)
     else
         TriggerClientEvent('ox_lib:notify', src, {title = Config.HeistNPC.boss_title, description = Config.GlobalTranslations['HeistStart'].heist_occupied.label, duration = Config.GlobalTranslations['HeistStart'].heist_occupied.timer, position = Config.Notifies.position, type = 'warning'})
     end
 end)
 
-RegisterNetEvent("ac-yacht-heist:server:SpawnBoatToSteal", function ()
+RegisterNetEvent("nw-yacht-heist:server:SpawnBoatToSteal", function ()
     local src = source
     local xPlayer = ESX.GetPlayerFromId(src)
     local boat = Config.HeistLocations.Boat_Pickup_Location
     
     if PlayerIsInRange(xPlayer, boat.boat_coords) then
         ESX.OneSync.SpawnVehicle(boat.BoatModel, boat.boat_coords, boat.boat_heading, {fuelLevel = 100}, function(NetworkId)
-            TriggerClientEvent('ac-yacht-heist:client:GoToYacht', src, NetworkId)
+            TriggerClientEvent('nw-yacht-heist:client:GoToYacht', src, NetworkId)
         end)
     end
 end)
 
-RegisterNetEvent("ac-yacht-heist:server:HeistStarted", function ()
+RegisterNetEvent("nw-yacht-heist:server:HeistStarted", function ()
     local src = source
     local xPlayer = ESX.GetPlayerFromId(src)
     local player_coords = xPlayer.getCoords(true) 
     local distance = #(Config.HeistNPC.location - player_coords)
 
     if distance > Config.HeistNPC.target_distance + 1.0 then
-        xPlayer.kick("Trigger Protectie AquaCity 📸")
         sendDiscordMessage("***Speler met informatie hieronder is gekickt vanwege een trigger protectie.***", Config.Webhook.hacker_log)
         return
     end
@@ -192,21 +189,21 @@ RegisterNetEvent("ac-yacht-heist:server:HeistStarted", function ()
     heistPlayers[src] = xPlayer.getIdentifier()
 end)
 
-RegisterNetEvent("ac-yacht-heist:server:RemoveActivePlayersFromTable", function ()
+RegisterNetEvent("nw-yacht-heist:server:RemoveActivePlayersFromTable", function ()
     local src = source
     local xPlayer = ESX.GetPlayerFromId(src)
 
-    if CheckForPlayersInHeist(src, xPlayer) then return end
+    -- if CheckForPlayersInHeist(src, xPlayer) then return end
     
     heistPlayers = {}
     StartHeistCooldownTimer()
 end)
 
-RegisterNetEvent("ac-yacht-heist:server:GivePlayerReward", function (coords, prop_name)
+RegisterNetEvent("nw-yacht-heist:server:GivePlayerReward", function (coords, prop_name)
     local src = source
     local xPlayer = ESX.GetPlayerFromId(src)
 
-    if CheckForPlayersInHeist(src, xPlayer) then return end
+    -- if CheckForPlayersInHeist(src, xPlayer) then return end
 
     while true do
         Citizen.Wait(150)

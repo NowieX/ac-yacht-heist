@@ -14,7 +14,7 @@ local function StopCameraRender()
     SetCamActive(cam, false)
 end
 
-RegisterNetEvent('ac-yacht-heist:client:StartHackCamera', function()
+RegisterNetEvent('nw-yacht-heist:client:StartHackCamera', function()
     exports.ox_target:removeZone(Hacking_Zone)
     local playerPed = PlayerPedId()
     local scene_coords = Config.HeistLocations.Security_panel_hack_scene.scene_location
@@ -95,13 +95,13 @@ RegisterNetEvent('ac-yacht-heist:client:StartHackCamera', function()
     DeleteEntity(hacker_card)
     DeleteEntity(suit_bag)
 
-    TriggerEvent("ac-yacht-heist:client:ExitCameraBuilding")
+    TriggerEvent("nw-yacht-heist:client:ExitCameraBuilding")
 
     Citizen.Wait(3000)
     DeleteEntity(security_panel)
 end)
 
-RegisterNetEvent('ac-yacht-heist:client:StartPickingScene', function (data)
+RegisterNetEvent('nw-yacht-heist:client:StartPickingScene', function (data)
     local scene_information = {
         table_object = data[1],
         prop = data[2],
@@ -168,7 +168,7 @@ RegisterNetEvent('ac-yacht-heist:client:StartPickingScene', function (data)
 
     NetworkStopSynchronisedScene(closeScene)
 
-    TriggerServerEvent("ac-yacht-heist:server:GivePlayerReward", scene_information.object_coords, scene_information.kind_prop)
+    TriggerServerEvent("nw-yacht-heist:server:GivePlayerReward", scene_information.object_coords, scene_information.kind_prop)
 
     DeleteEntity(scene_information.prop)
     DeleteEntity(player_bag)

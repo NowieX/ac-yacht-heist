@@ -10,10 +10,10 @@ $(document).ready(function () {
 
 function StartHeist() {
     $('#container').fadeOut(500);
-    $.post('https://ac-yacht-heist/ac-yacht-heist:client:StartHackingPreperation')
+    $.post('https://nw-yacht-heist/nw-yacht-heist:client:StartHackingPreperation')
 }
 
 function CloseHeistMenu() {
     $("#container").fadeOut(500);
-    $.post('https://ac-yacht-heist/ac-yacht-heist:client:CloseMenuHeist')
+    $.post('https://nw-yacht-heist/nw-yacht-heist:client:CloseMenuHeist')
 }
